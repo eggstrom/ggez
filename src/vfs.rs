@@ -547,33 +547,15 @@ impl VFS for OverlayFS {
     }
 }
 
-trait ZipArchiveAccess {
-    fn by_name(&mut self, name: &str) -> zip::result::ZipResult<zip::read::ZipFile<'_>>;
-    fn by_index(&mut self, file_number: usize) -> zip::result::ZipResult<zip::read::ZipFile<'_>>;
-    fn len(&self) -> usize;
-}
+pub trait ReadSeek: Read + Seek {}
 
-impl<T: Read + Seek> ZipArchiveAccess for zip::ZipArchive<T> {
-    fn by_name(&mut self, name: &str) -> zip::result::ZipResult<zip::read::ZipFile> {
-        let filename =
-            sanitize_path_for_zip(Path::new(name)).ok_or(zip::result::ZipError::FileNotFound)?;
-        self.by_name(&filename)
-    }
+impl<T: Read + Seek> ReadSeek for T {}
 
-    fn by_index(&mut self, file_number: usize) -> zip::result::ZipResult<zip::read::ZipFile> {
-        self.by_index(file_number)
-    }
-
-    fn len(&self) -> usize {
-        self.len()
-    }
-}
-
-impl Debug for dyn ZipArchiveAccess {
+impl Debug for dyn ReadSeek {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         // Hide the contents; for an io::Cursor, this would print what is
         // likely to be megabytes of data.
-        write!(f, "<ZipArchiveAccess>")
+        write!(f, "<reader>")
     }
 }
 
@@ -590,7 +572,7 @@ pub struct ZipFS {
     // HORRIFICALLY BROKEN BY DESIGN SO WE'RE JUST GONNA REFCELL IT AND COPY
     // ALL CONTENTS OUT OF IT AAAAA.
     source: Option<PathBuf>,
-    archive: RefCell<Box<dyn ZipArchiveAccess>>,
+    archive: RefCell<zip::ZipArchive<Box<dyn ReadSeek>>>,
     // We keep an index of what files are in the zip file
     // because trying to read it lazily is a pain in the butt.
     index: Vec<String>,
@@ -599,8 +581,7 @@ pub struct ZipFS {
 impl ZipFS {
     pub fn new(filename: &Path) -> GameResult<Self> {
         let f = fs::File::open(filename)?;
-        let archive = Box::new(zip::ZipArchive::new(f)?);
-        Ok(ZipFS::from_boxed_archive(archive, Some(filename.into())))
+        Self::from_reader(Box::new(f), Some(filename.into()))
     }
 
     /// Creates a `ZipFS` from any `Read+Seek` object, most useful with an
@@ -609,25 +590,21 @@ impl ZipFS {
     where
         R: Read + Seek + 'static,
     {
-        let archive = Box::new(zip::ZipArchive::new(reader)?);
-        Ok(ZipFS::from_boxed_archive(archive, None))
+        Self::from_reader(Box::new(reader), None)
     }
 
-    fn from_boxed_archive(mut archive: Box<dyn ZipArchiveAccess>, source: Option<PathBuf>) -> Self {
-        let idx = (0..archive.len())
-            .map(|i| {
-                archive
-                    .by_index(i)
-                    .expect("Should never happen!")
-                    .name()
-                    .to_string()
-            })
+    fn from_reader(reader: Box<dyn ReadSeek>, source: Option<PathBuf>) -> GameResult<Self> {
+        let mut archive = zip::ZipArchive::new(reader)?;
+
+        let index = (0..archive.len())
+            .map(|i| archive.by_index(i).unwrap().name().to_string())
             .collect();
-        Self {
+
+        Ok(Self {
             source,
             archive: RefCell::new(archive),
-            index: idx,
-        }
+            index,
+        })
     }
 }
 
@@ -716,8 +693,8 @@ impl ZipMetadata {
     /// this way without basically just faking it.
     ///
     /// This does make listing a directory rather screwy.
-    fn new(name: &str, archive: &mut dyn ZipArchiveAccess) -> Option<Self> {
-        match archive.by_name(name) {
+    fn new(name: &str, archive: &mut zip::ZipArchive<Box<dyn ReadSeek>>) -> Option<Self> {
+        match archive_get_by_name(archive, name) {
             Err(_) => None,
             Ok(zipfile) => {
                 let len = zipfile.size();
@@ -743,6 +720,15 @@ impl VMetadata for ZipMetadata {
     }
 }
 
+fn archive_get_by_name<'a>(
+    archive: &'a mut zip::ZipArchive<Box<dyn ReadSeek>>,
+    name: &str,
+) -> zip::result::ZipResult<zip::read::ZipFile<'a>> {
+    let filename =
+        sanitize_path_for_zip(Path::new(name)).ok_or(zip::result::ZipError::FileNotFound)?;
+    archive.by_name(&filename)
+}
+
 impl VFS for ZipFS {
     fn open_options(&self, path: &Path, open_options: OpenOptions) -> GameResult<Box<dyn VFile>> {
         // Zip is readonly
@@ -753,10 +739,10 @@ impl VFS for ZipFS {
                 format!("Cannot alter file {path:?} in zipfile {self:?}, filesystem read-only");
             return Err(GameError::FilesystemError(msg));
         }
-        let mut stupid_archive_borrow = self.archive
+        let mut archive = self.archive
             .try_borrow_mut()
             .expect("Couldn't borrow ZipArchive in ZipFS::open_options(); should never happen! Report a bug at https://github.com/ggez/ggez/");
-        let mut f = stupid_archive_borrow.by_name(path)?;
+        let mut f = archive_get_by_name(&mut archive, path)?;
         let zipfile = ZipFileWrapper::new(&mut f)?;
         Ok(Box::new(zipfile) as Box<dyn VFile>)
     }
@@ -777,11 +763,11 @@ impl VFS for ZipFS {
     }
 
     fn exists(&self, path: &Path) -> bool {
-        let mut stupid_archive_borrow = self.archive
+        let mut archive = self.archive
             .try_borrow_mut()
             .expect("Couldn't borrow ZipArchive in ZipFS::exists(); should never happen!  Report a bug at https://github.com/ggez/ggez/");
         if let Ok(path) = convenient_path_to_str(path) {
-            stupid_archive_borrow.by_name(path).is_ok()
+            archive_get_by_name(&mut archive, path).is_ok()
         } else {
             false
         }
@@ -792,7 +778,7 @@ impl VFS for ZipFS {
         let mut stupid_archive_borrow = self.archive
             .try_borrow_mut()
             .expect("Couldn't borrow ZipArchive in ZipFS::metadata(); should never happen! Report a bug at https://github.com/ggez/ggez/");
-        match ZipMetadata::new(path, &mut **stupid_archive_borrow) {
+        match ZipMetadata::new(path, &mut stupid_archive_borrow) {
             None => Err(GameError::FilesystemError(format!(
                 "Metadata not found in zip file for {path}"
             ))),
