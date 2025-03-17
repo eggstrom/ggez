@@ -495,7 +495,7 @@ impl<'a> InternalCanvas3d<'a> {
             || self
                 .curr_image
                 .as_ref()
-                .map_or(true, |curr| *curr != image.view)
+                .is_none_or(|curr| *curr != image.view)
         {
             self.curr_sampler = self.next_sampler;
             let sample = self.sampler_cache.get(&self.wgpu.device, self.curr_sampler);

@@ -626,7 +626,7 @@ impl<'a> InternalCanvas<'a> {
             || self
                 .curr_image
                 .as_ref()
-                .map_or(true, |curr| *curr != image.view)
+                .is_none_or(|curr| *curr != image.view)
         {
             self.curr_sampler = self.next_sampler;
             let sample = self.sampler_cache.get(&self.wgpu.device, self.curr_sampler);
@@ -640,7 +640,7 @@ impl<'a> InternalCanvas<'a> {
 
     fn set_text_image(&mut self, view: wgpu::TextureView) {
         if self.curr_sampler != self.next_sampler
-            || self.curr_image.as_ref().map_or(true, |curr| *curr != view)
+            || self.curr_image.as_ref().is_none_or(|curr| *curr != view)
         {
             self.curr_sampler = self.next_sampler;
 
