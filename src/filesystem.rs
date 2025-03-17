@@ -54,34 +54,13 @@ pub use crate::vfs::OpenOptions;
 const CONFIG_NAME: &str = "/conf.toml";
 
 /// A structure that contains the filesystem state and cache.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Filesystem {
     vfs: Arc<Mutex<vfs::OverlayFS>>,
     resources_dir: path::PathBuf,
     zip_dir: path::PathBuf,
     user_config_dir: path::PathBuf,
     user_data_dir: path::PathBuf,
-}
-
-/// This is the same as [`std::clone::Clone`] but only accessible to ggez
-/// via a non-public implementation.
-///
-/// We don't need to expose the fact that [`Filesystem`] can be cloned to user,
-/// in case we want to change this in the future.
-pub(crate) trait InternalClone {
-    fn clone(&self) -> Self;
-}
-
-impl InternalClone for Filesystem {
-    fn clone(&self) -> Self {
-        Filesystem {
-            vfs: self.vfs.clone(),
-            resources_dir: self.resources_dir.clone(),
-            zip_dir: self.zip_dir.clone(),
-            user_config_dir: self.user_config_dir.clone(),
-            user_data_dir: self.user_data_dir.clone(),
-        }
-    }
 }
 
 /// Represents a file, either in the filesystem, or in the resources zip file,

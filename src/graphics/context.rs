@@ -15,7 +15,7 @@ use crate::{
     conf::{self, Backend, Conf, FullscreenType, WindowMode},
     context::Has,
     error::GameResult,
-    filesystem::{Filesystem, InternalClone},
+    filesystem::Filesystem,
     graphics::gpu::{bind_group::BindGroupLayoutBuilder, pipeline::RenderPipelineInfo},
     GameError,
 };
@@ -426,7 +426,7 @@ impl GraphicsContext {
             white_image,
             instance_bind_layout,
 
-            fs: InternalClone::clone(filesystem),
+            fs: filesystem.clone(),
 
             bind_group: None,
         };
