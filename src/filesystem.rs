@@ -275,14 +275,10 @@ impl Filesystem {
     /// in no particular order.
     ///
     /// Lists the base directory if an empty path is given.
-    pub fn read_dir<P: AsRef<path::Path>>(
-        &self,
-        path: P,
-    ) -> GameResult<Box<dyn Iterator<Item = path::PathBuf>>> {
-        let itr = self.vfs().read_dir(path.as_ref())?.map(|fname| {
-            fname.expect("Could not read file in read_dir()?  Should never happen, I hope!")
-        });
-        Ok(Box::new(itr))
+    pub fn read_dir<P: AsRef<path::Path>>(&self, path: P) -> GameResult<Vec<path::PathBuf>> {
+        let mut paths = Vec::new();
+        self.vfs().read_dir(path.as_ref(), &mut paths)?;
+        Ok(paths)
     }
 
     fn write_to_string(&self) -> String {
@@ -290,7 +286,7 @@ impl Filesystem {
         let mut s = String::new();
         for vfs in self.vfs().roots() {
             write!(s, "Source {vfs:?}").expect("Could not write to string; should never happen?");
-            match vfs.read_dir(path::Path::new("/")) {
+            match self.read_dir("/") {
                 Ok(files) => {
                     for itm in files {
                         write!(s, "  {itm:?}")
@@ -439,7 +435,7 @@ mod tests {
     fn headless_test_read_dir() {
         let f = dummy_fs_for_tests();
 
-        let dir_contents_size = f.read_dir("/").unwrap().count();
+        let dir_contents_size = f.read_dir("/").unwrap().len();
         assert!(dir_contents_size > 0);
     }
 

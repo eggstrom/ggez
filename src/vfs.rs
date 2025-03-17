@@ -132,7 +132,7 @@ pub trait VFS: Debug {
     fn metadata(&self, path: &Path) -> GameResult<Box<dyn VMetadata>>;
 
     /// Retrieve all file and directory entries in the given directory.
-    fn read_dir(&self, path: &Path) -> GameResult<Box<dyn Iterator<Item = GameResult<PathBuf>>>>;
+    fn read_dir(&self, path: &Path, dst: &mut Vec<PathBuf>) -> GameResult<()>;
 
     /// Retrieve the actual location of the VFS root, if available.
     fn to_path_buf(&self) -> Option<PathBuf>;
@@ -389,7 +389,7 @@ impl VFS for PhysicalFS {
     }
 
     /// Retrieve the path entries in this path
-    fn read_dir(&self, path: &Path) -> GameResult<Box<dyn Iterator<Item = GameResult<PathBuf>>>> {
+    fn read_dir(&self, path: &Path, dst: &mut Vec<PathBuf>) -> GameResult<()> {
         let p = self.to_absolute(path)?;
         // This is inconvenient because path() returns the full absolute
         // path of the bloody file, which is NOT what we want!
@@ -398,20 +398,17 @@ impl VFS for PhysicalFS {
         // So that we can do read_dir("/foobar/"), and for each file, open it and query
         // it and such by name.
         // So we build the paths ourself.
-        let direntry_to_path = |entry: &fs::DirEntry| -> GameResult<PathBuf> {
-            let fname = entry
-                .file_name()
-                .into_string()
-                .expect("Non-unicode char in file path?  Should never happen, I hope!");
+        let direntry_to_path = |entry: fs::DirEntry| -> PathBuf {
             let mut pathbuf = PathBuf::from(path);
-            pathbuf.push(fname);
-            Ok(pathbuf)
+            pathbuf.push(entry.file_name());
+            pathbuf
         };
-        let itr = fs::read_dir(p)?
-            .map(|entry| direntry_to_path(&entry?))
-            .collect::<Vec<_>>()
-            .into_iter();
-        Ok(Box::new(itr))
+
+        for entry in fs::read_dir(p)? {
+            dst.push(direntry_to_path(entry?));
+        }
+
+        Ok(())
     }
 
     /// Retrieve the actual location of the VFS root, if available.
@@ -537,16 +534,11 @@ impl VFS for OverlayFS {
     }
 
     /// Retrieve the path entries in this path
-    fn read_dir(&self, path: &Path) -> GameResult<Box<dyn Iterator<Item = GameResult<PathBuf>>>> {
-        // This is tricky 'cause we have to actually merge iterators together...
-        // Doing it the simple and stupid way works though.
-        let mut v = Vec::new();
+    fn read_dir(&self, path: &Path, dst: &mut Vec<PathBuf>) -> GameResult<()> {
         for fs in &self.roots {
-            if let Ok(rddir) = fs.read_dir(path) {
-                v.extend(rddir);
-            }
+            let _ = fs.read_dir(path, dst);
         }
-        Ok(Box::new(v.into_iter()))
+        Ok(())
     }
 
     /// Retrieve the actual location of the VFS root, if available.
@@ -792,18 +784,20 @@ impl VFS for ZipFS {
     #[allow(clippy::needless_collect)]
     /// Zip files don't have real directories, so we (incorrectly) hack it by
     /// just looking for a path prefix for now.
-    fn read_dir(&self, path: &Path) -> GameResult<Box<dyn Iterator<Item = GameResult<PathBuf>>>> {
+    fn read_dir(&self, path: &Path, dst: &mut Vec<PathBuf>) -> GameResult<()> {
         let path = sanitize_path_for_zip(path).ok_or_else(|| {
             let errmessage = format!("Invalid path format for resource: {path:?}");
             GameError::FilesystemError(errmessage)
         })? + "/";
-        let itr = self
-            .index
-            .iter()
-            .filter(|&s| s.starts_with(&path) && s != &path)
-            .map(|s| Ok(PathBuf::from("/").join(s)))
-            .collect::<Vec<_>>();
-        Ok(Box::new(itr.into_iter()))
+
+        dst.extend(
+            self.index
+                .iter()
+                .filter(|&s| s.starts_with(&path) && s != &path)
+                .map(|s| PathBuf::from("/").join(s)),
+        );
+
+        Ok(())
     }
 
     fn to_path_buf(&self) -> Option<PathBuf> {
@@ -933,12 +927,14 @@ mod tests {
         }
 
         {
+            let mut r = Vec::new();
             // Test read_dir()
-            let r = fs.read_dir(testdir).unwrap();
-            assert_eq!(r.count(), 1);
-            let r = fs.read_dir(testdir).unwrap();
-            for f in r {
-                let fname = f.unwrap();
+            fs.read_dir(testdir, &mut r).unwrap();
+            assert_eq!(r.len(), 1);
+
+            r.clear();
+            fs.read_dir(testdir, &mut r).unwrap();
+            for fname in r {
                 assert!(fs.exists(&fname));
             }
         }
