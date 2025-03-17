@@ -66,38 +66,31 @@ pub struct Filesystem {
 /// Represents a file, either in the filesystem, or in the resources zip file,
 /// or whatever.
 #[derive(Debug)]
-pub enum File {
-    /// A wrapper for a VFile trait object.
-    VfsFile(Box<dyn vfs::VFile>),
-}
+pub struct File(Box<dyn vfs::VFile>);
 
 impl io::Read for File {
+    #[inline]
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        match *self {
-            File::VfsFile(ref mut f) => f.read(buf),
-        }
+        self.0.read(buf)
     }
 }
 
 impl io::Write for File {
+    #[inline]
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        match *self {
-            File::VfsFile(ref mut f) => f.write(buf),
-        }
+        self.0.write(buf)
     }
 
+    #[inline]
     fn flush(&mut self) -> io::Result<()> {
-        match *self {
-            File::VfsFile(ref mut f) => f.flush(),
-        }
+        self.0.flush()
     }
 }
 
 impl io::Seek for File {
+    #[inline]
     fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> {
-        match *self {
-            File::VfsFile(ref mut f) => f.seek(pos),
-        }
+        self.0.seek(pos)
     }
 }
 
@@ -209,7 +202,7 @@ impl Filesystem {
     /// Opens the given `path` and returns the resulting `File`
     /// in read-only mode.
     pub fn open<P: AsRef<path::Path>>(&self, path: P) -> GameResult<File> {
-        self.vfs().open(path.as_ref()).map(File::VfsFile)
+        self.vfs().open(path.as_ref()).map(File)
     }
 
     /// Opens a file in the user directory with the given
@@ -223,7 +216,7 @@ impl Filesystem {
     ) -> GameResult<File> {
         self.vfs()
             .open_options(path.as_ref(), options)
-            .map(File::VfsFile)
+            .map(File)
             .map_err(|e| {
                 GameError::ResourceLoadError(format!(
                     "Tried to open {:?} but got error: {:?}",
@@ -236,7 +229,7 @@ impl Filesystem {
     /// Creates a new file in the user directory and opens it
     /// to be written to, truncating it if it already exists.
     pub fn create<P: AsRef<path::Path>>(&self, path: P) -> GameResult<File> {
-        self.vfs().create(path.as_ref()).map(File::VfsFile)
+        self.vfs().create(path.as_ref()).map(File)
     }
 
     /// Create an empty directory in the user dir
