@@ -9,12 +9,12 @@
 //! as a trait object, and its path abstraction is not the most
 //! convenient.
 
-use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::fmt::{self, Debug};
 use std::fs;
 use std::io::{self, Read, Seek, Write};
 use std::path::{self, Path, PathBuf};
+use std::sync::Mutex;
 
 use crate::error::{GameError, GameResult};
 
@@ -94,7 +94,7 @@ impl OpenOptions {
 }
 
 #[allow(clippy::upper_case_acronyms)]
-pub trait VFS: Debug {
+pub trait VFS: Debug + Send + Sync {
     /// Open the file at this path with the given options
     fn open_options(&self, path: &Path, open_options: OpenOptions) -> GameResult<Box<dyn VFile>>;
     /// Open the file at this path for reading
@@ -547,9 +547,9 @@ impl VFS for OverlayFS {
     }
 }
 
-pub trait ReadSeek: Read + Seek {}
+pub trait ReadSeek: Read + Seek + Send {}
 
-impl<T: Read + Seek> ReadSeek for T {}
+impl<T: Read + Seek + Send> ReadSeek for T {}
 
 impl Debug for dyn ReadSeek {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
@@ -572,7 +572,7 @@ pub struct ZipFS {
     // HORRIFICALLY BROKEN BY DESIGN SO WE'RE JUST GONNA REFCELL IT AND COPY
     // ALL CONTENTS OUT OF IT AAAAA.
     source: Option<PathBuf>,
-    archive: RefCell<zip::ZipArchive<Box<dyn ReadSeek>>>,
+    archive: Mutex<zip::ZipArchive<Box<dyn ReadSeek>>>,
     // We keep an index of what files are in the zip file
     // because trying to read it lazily is a pain in the butt.
     index: Vec<String>,
@@ -588,7 +588,7 @@ impl ZipFS {
     /// in-memory `std::io::Cursor`.
     pub fn from_read<R>(reader: R) -> GameResult<Self>
     where
-        R: Read + Seek + 'static,
+        R: Read + Seek + Send + 'static,
     {
         Self::from_reader(Box::new(reader), None)
     }
@@ -602,7 +602,7 @@ impl ZipFS {
 
         Ok(Self {
             source,
-            archive: RefCell::new(archive),
+            archive: Mutex::new(archive),
             index,
         })
     }
@@ -739,9 +739,7 @@ impl VFS for ZipFS {
                 format!("Cannot alter file {path:?} in zipfile {self:?}, filesystem read-only");
             return Err(GameError::FilesystemError(msg));
         }
-        let mut archive = self.archive
-            .try_borrow_mut()
-            .expect("Couldn't borrow ZipArchive in ZipFS::open_options(); should never happen! Report a bug at https://github.com/ggez/ggez/");
+        let mut archive = self.archive.lock().unwrap();
         let mut f = archive_get_by_name(&mut archive, path)?;
         let zipfile = ZipFileWrapper::new(&mut f)?;
         Ok(Box::new(zipfile) as Box<dyn VFile>)
@@ -763,9 +761,7 @@ impl VFS for ZipFS {
     }
 
     fn exists(&self, path: &Path) -> bool {
-        let mut archive = self.archive
-            .try_borrow_mut()
-            .expect("Couldn't borrow ZipArchive in ZipFS::exists(); should never happen!  Report a bug at https://github.com/ggez/ggez/");
+        let mut archive = self.archive.lock().unwrap();
         if let Ok(path) = convenient_path_to_str(path) {
             archive_get_by_name(&mut archive, path).is_ok()
         } else {
@@ -775,10 +771,8 @@ impl VFS for ZipFS {
 
     fn metadata(&self, path: &Path) -> GameResult<Box<dyn VMetadata>> {
         let path = convenient_path_to_str(path)?;
-        let mut stupid_archive_borrow = self.archive
-            .try_borrow_mut()
-            .expect("Couldn't borrow ZipArchive in ZipFS::metadata(); should never happen! Report a bug at https://github.com/ggez/ggez/");
-        match ZipMetadata::new(path, &mut stupid_archive_borrow) {
+        let mut archive = self.archive.lock().unwrap();
+        match ZipMetadata::new(path, &mut archive) {
             None => Err(GameError::FilesystemError(format!(
                 "Metadata not found in zip file for {path}"
             ))),

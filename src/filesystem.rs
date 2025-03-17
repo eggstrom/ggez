@@ -32,9 +32,6 @@
 //! directory isolation is intended for convenience, not security, so
 //! don't assume it will be secure.
 
-// FIXME: Investigate why an `Arc` exists in the first place
-#![allow(clippy::arc_with_non_send_sync)]
-
 use crate::{
     conf,
     vfs::{self, OverlayFS, VFS},
@@ -42,11 +39,8 @@ use crate::{
 };
 use directories::ProjectDirs;
 use std::{
-    env, io,
-    io::SeekFrom,
-    ops::DerefMut,
-    path,
-    sync::{Arc, Mutex},
+    env, io, path,
+    sync::{Arc, RwLock},
 };
 
 pub use crate::vfs::OpenOptions;
@@ -56,7 +50,7 @@ const CONFIG_NAME: &str = "/conf.toml";
 /// A structure that contains the filesystem state and cache.
 #[derive(Clone, Debug)]
 pub struct Filesystem {
-    vfs: Arc<Mutex<vfs::OverlayFS>>,
+    vfs: Arc<RwLock<vfs::OverlayFS>>,
     resources_dir: path::PathBuf,
     zip_dir: path::PathBuf,
     user_config_dir: path::PathBuf,
@@ -109,7 +103,7 @@ impl io::Write for File {
 
 impl io::Seek for File {
     #[inline]
-    fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> {
+    fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
         self.0.seek(pos)
     }
 
@@ -210,7 +204,7 @@ impl Filesystem {
         }
 
         let fs = Filesystem {
-            vfs: Arc::new(Mutex::new(overlay)),
+            vfs: Arc::new(RwLock::new(overlay)),
             resources_dir: resources_path,
             zip_dir: resources_zip_path,
             user_config_dir: user_config_path.to_path_buf(),
@@ -220,8 +214,12 @@ impl Filesystem {
         Ok(fs)
     }
 
-    fn vfs(&self) -> impl DerefMut<Target = OverlayFS> + '_ {
-        self.vfs.lock().unwrap()
+    fn vfs(&self) -> impl std::ops::Deref<Target = OverlayFS> + '_ {
+        self.vfs.read().unwrap()
+    }
+
+    fn vfs_mut(&self) -> impl std::ops::DerefMut<Target = OverlayFS> + '_ {
+        self.vfs.write().unwrap()
     }
 
     /// Opens the given `path` and returns the resulting `File`
@@ -348,7 +346,7 @@ impl Filesystem {
     pub fn mount(&self, path: &path::Path, readonly: bool) {
         let physfs = vfs::PhysicalFS::new(path, readonly);
         trace!("Mounting new path: {:?}", physfs);
-        self.vfs().push_back(Box::new(physfs));
+        self.vfs_mut().push_back(Box::new(physfs));
     }
 
     /// Adds any object that implements Read + Seek as a zip file.
@@ -357,10 +355,10 @@ impl Filesystem {
     /// for `.mount()`. Rather, it can be used to read zip files from sources
     /// such as `std::io::Cursor::new(includes_bytes!(...))` in order to embed
     /// resources into the game's executable.
-    pub fn add_zip_file<R: io::Read + io::Seek + 'static>(&self, reader: R) -> GameResult {
+    pub fn add_zip_file<R: io::Read + io::Seek + Send + 'static>(&self, reader: R) -> GameResult {
         let zipfs = vfs::ZipFS::from_read(reader)?;
         trace!("Adding zip file from reader");
-        self.vfs().push_back(Box::new(zipfs));
+        self.vfs_mut().push_back(Box::new(zipfs));
         Ok(())
     }
 
@@ -422,7 +420,7 @@ impl Filesystem {
 mod tests {
     use crate::conf;
     use crate::error::GameError;
-    use crate::filesystem::{env, vfs, Arc, Filesystem, Mutex, CONFIG_NAME};
+    use crate::filesystem::{env, vfs, Arc, Filesystem, RwLock, CONFIG_NAME};
     use std::io::{Read, Write};
     use std::path;
 
@@ -433,7 +431,7 @@ mod tests {
         let mut ofs = vfs::OverlayFS::new();
         ofs.push_front(Box::new(physfs));
         Filesystem {
-            vfs: Arc::new(Mutex::new(ofs)),
+            vfs: Arc::new(RwLock::new(ofs)),
 
             resources_dir: "".into(),
             zip_dir: "".into(),
