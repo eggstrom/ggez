@@ -659,11 +659,26 @@ impl io::Read for ZipFileWrapper {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.buffer.read(buf)
     }
+
+    fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
+        self.buffer.read_exact(buf)
+    }
+
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        self.buffer.read_to_end(buf)
+    }
+
+    fn read_to_string(&mut self, buf: &mut String) -> io::Result<usize> {
+        self.buffer.read_to_string(buf)
+    }
 }
 
 impl io::Write for ZipFileWrapper {
     fn write(&mut self, _buf: &[u8]) -> io::Result<usize> {
-        panic!("Cannot write to a zip file!")
+        Err(io::Error::new(
+            io::ErrorKind::Unsupported,
+            "cannot write to a zip file!",
+        ))
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -674,6 +689,10 @@ impl io::Write for ZipFileWrapper {
 impl io::Seek for ZipFileWrapper {
     fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
         self.buffer.seek(pos)
+    }
+
+    fn stream_position(&mut self) -> io::Result<u64> {
+        self.buffer.stream_position()
     }
 }
 
