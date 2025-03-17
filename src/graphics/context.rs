@@ -20,7 +20,6 @@ use crate::{
     GameError,
 };
 use glyph_brush::FontId;
-use image as imgcrate;
 use std::{collections::HashMap, path::Path, sync::Arc};
 use winit::dpi::{self, PhysicalPosition};
 
@@ -817,15 +816,12 @@ pub(crate) fn load_icon(
     icon_file: &Path,
     filesystem: &Filesystem,
 ) -> GameResult<winit::window::Icon> {
-    use std::io::Read;
     use winit::window::Icon;
 
-    let mut buf = Vec::new();
-    let mut reader = filesystem.open(icon_file)?;
-    let _ = reader.read_to_end(&mut buf)?;
-    let i = imgcrate::load_from_memory(&buf)?;
-    let image_data = i.to_rgba8();
-    Icon::from_rgba(image_data.to_vec(), i.width(), i.height()).map_err(|e| {
+    let buf = filesystem.read(icon_file)?;
+    let img = image::load_from_memory(&buf)?.into_rgba8();
+
+    Icon::from_rgba(img.to_vec(), img.width(), img.height()).map_err(|e| {
         let msg = format!("Could not load icon: {e:?}");
         GameError::ResourceLoadError(msg)
     })
