@@ -39,7 +39,9 @@ use crate::{
 };
 use directories::ProjectDirs;
 use std::{
-    env, io, path,
+    env,
+    io::{self, Read},
+    path,
     sync::{Arc, RwLock},
 };
 
@@ -253,6 +255,22 @@ impl Filesystem {
     /// to be written to, truncating it if it already exists.
     pub fn create<P: AsRef<path::Path>>(&self, path: P) -> GameResult<File> {
         self.vfs().create(path.as_ref()).map(File)
+    }
+
+    /// Reads the whole content of a file to a `Vec`.
+    pub fn read<P: AsRef<path::Path>>(&self, path: P) -> GameResult<Vec<u8>> {
+        let mut file = self.open(path)?;
+        let mut buf = Vec::new();
+        let _ = file.read_to_end(&mut buf)?;
+        Ok(buf)
+    }
+
+    /// Reads the whole content of a file to a `String`.
+    pub fn read_to_string<P: AsRef<path::Path>>(&self, path: P) -> GameResult<String> {
+        let mut file = self.open(path)?;
+        let mut buf = String::new();
+        let _ = file.read_to_string(&mut buf)?;
+        Ok(buf)
     }
 
     /// Create an empty directory in the user dir
