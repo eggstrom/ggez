@@ -241,7 +241,7 @@ impl<'a, Uniforms: AsStd140> ShaderParamsBuilder<'a, Uniforms> {
     /// # Arguments
     ///
     /// * `vs_visible` - If the images should also be visible to the vertex shader, rather
-    ///    than just the fragment shader.
+    ///   than just the fragment shader.
     #[must_use]
     pub fn images(
         self,
