@@ -363,7 +363,7 @@ impl GameState {
         let snake_pos = (GRID_SIZE.0 / 4, GRID_SIZE.1 / 2).into();
         // And we seed our RNG with the system RNG.
         let mut seed: [u8; 8] = [0; 8];
-        getrandom::getrandom(&mut seed[..]).expect("Could not create RNG seed");
+        getrandom::fill(&mut seed[..]).expect("Could not create RNG seed");
         let mut rng = Rand32::new(u64::from_ne_bytes(seed));
         // Then we choose a random place to put our piece of food using the helper we made
         // earlier.

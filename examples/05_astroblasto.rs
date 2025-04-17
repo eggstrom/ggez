@@ -330,7 +330,7 @@ impl MainState {
 
         // Seed our RNG
         let mut seed: [u8; 8] = [0; 8];
-        getrandom::getrandom(&mut seed[..]).expect("Could not create RNG seed");
+        getrandom::fill(&mut seed[..]).expect("Could not create RNG seed");
         let mut rng = Rand32::new(u64::from_ne_bytes(seed));
 
         let assets = Assets::new(ctx)?;

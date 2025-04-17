@@ -245,16 +245,14 @@ impl GraphicsContext {
             force_fallback_adapter: false,
             compatible_surface: Some(&surface),
         }))
-        .ok_or(GameError::GraphicsInitializationError)?;
+        .or(Err(GameError::GraphicsInitializationError))?;
 
         // One instance is 96 bytes, and we allow 1 million of them, for a total of 96MB (default being 128MB).
         const MAX_INSTANCES: u32 = 1_000_000;
         const INSTANCE_BUFFER_SIZE: u32 = 96 * MAX_INSTANCES;
 
-        let (device, queue) = pollster::block_on(adapter.request_device(
-            &wgpu::DeviceDescriptor {
-                label: None,
-                required_features: wgpu::Features::default(),
+        let (device, queue) =
+            pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
                 required_limits: wgpu::Limits {
                     // 1st: DrawParams
                     // 2nd: Texture + Sampler
@@ -268,10 +266,8 @@ impl GraphicsContext {
                     max_texture_dimension_2d: 8192,
                     ..wgpu::Limits::downlevel_webgl2_defaults()
                 },
-                memory_hints: wgpu::MemoryHints::default(),
-            },
-            None,
-        ))?;
+                ..wgpu::DeviceDescriptor::default()
+            }))?;
 
         let wgpu = Arc::new(WgpuContext {
             instance,
@@ -710,7 +706,7 @@ impl GraphicsContext {
 
     pub(crate) fn resize(&mut self, _new_size: dpi::PhysicalSize<u32>) {
         let size = self.window.inner_size();
-        let _ = self.wgpu.device.poll(wgpu::Maintain::Wait);
+        let _ = self.wgpu.device.poll(wgpu::PollType::Wait);
         self.surface_config.width = size.width.max(1);
         self.surface_config.height = size.height.max(1);
         self.wgpu
