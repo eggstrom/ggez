@@ -312,7 +312,7 @@ impl MeshBuilder {
         Self::default()
     }
 
-    /// Create a new mesh for a line of one or more connected segments.
+    /// Extend the mesh with a line of one or more connected segments.
     pub fn line<P>(&mut self, points: &[P], width: f32, color: Color) -> GameResult<&mut Self>
     where
         P: Into<mint::Point2<f32>> + Clone,
@@ -320,7 +320,7 @@ impl MeshBuilder {
         self.polyline(DrawMode::stroke(width), points, color)
     }
 
-    /// Create a new mesh for a circle.
+    /// Extend the mesh with a circle.
     ///
     /// For the meaning of the `tolerance` parameter, [see here](https://docs.rs/lyon_geom/0.11.0/lyon_geom/#flattening).
     pub fn circle<P>(
@@ -368,7 +368,7 @@ impl MeshBuilder {
         Ok(self)
     }
 
-    /// Create a new mesh for an ellipse.
+    /// Extend the mesh with an ellipse.
     ///
     /// For the meaning of the `tolerance` parameter, [see here](https://docs.rs/lyon_geom/0.11.0/lyon_geom/#flattening).
     pub fn ellipse<P>(
@@ -423,7 +423,7 @@ impl MeshBuilder {
         Ok(self)
     }
 
-    /// Create a new mesh for a series of connected lines.
+    /// Extend the mesh with a series of connected lines.
     pub fn polyline<P>(
         &mut self,
         mode: DrawMode,
@@ -442,7 +442,7 @@ impl MeshBuilder {
         self.polyline_inner(mode, points, false, color)
     }
 
-    /// Create a new mesh for a closed polygon.
+    /// Extend the mesh with a closed polygon.
     /// The points given must be in clockwise order,
     /// otherwise at best the polygon will not draw.
     pub fn polygon<P>(
@@ -479,7 +479,7 @@ impl MeshBuilder {
         self.polyline_with_vertex_builder(mode, points, is_closed, vb)
     }
 
-    /// Create a new mesh for a given polyline using a custom vertex builder.
+    /// Extend the mesh with a given polyline using a custom vertex builder.
     /// The points given must be in clockwise order.
     pub fn polyline_with_vertex_builder<P, V>(
         &mut self,
@@ -523,7 +523,7 @@ impl MeshBuilder {
         Ok(self)
     }
 
-    /// Create a new mesh for a rectangle.
+    /// Extend the mesh with a rectangle.
     pub fn rectangle(
         &mut self,
         mode: DrawMode,
@@ -555,7 +555,7 @@ impl MeshBuilder {
         Ok(self)
     }
 
-    /// Create a new mesh for a rounded rectangle.
+    /// Extend the mesh with a rounded rectangle.
     pub fn rounded_rectangle(
         &mut self,
         mode: DrawMode,
