@@ -19,7 +19,6 @@ use crate::context::Has;
 use crate::error::GameError;
 use crate::error::GameResult;
 use crate::filesystem::Filesystem;
-use crate::filesystem::InternalClone;
 
 /// A struct that contains all information for tracking sound info.
 ///
@@ -40,7 +39,7 @@ impl AudioContext {
             ))
         })?;
         Ok(Self {
-            fs: InternalClone::clone(fs),
+            fs: fs.clone(),
             _stream: stream,
             stream_handle,
         })

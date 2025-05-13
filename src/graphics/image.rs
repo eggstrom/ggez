@@ -6,7 +6,6 @@ use crate::{context::Has, Context, GameError, GameResult};
 use image::ImageEncoder;
 use std::{
     collections::BTreeMap,
-    io::Read,
     path::Path,
     sync::{Arc, RwLock},
 };
@@ -155,10 +154,7 @@ impl Image {
     pub fn from_path(gfx: &impl Has<GraphicsContext>, path: impl AsRef<Path>) -> GameResult<Self> {
         let gfx = gfx.retrieve();
 
-        let mut encoded = Vec::new();
-        gfx.fs.open(path)?.read_to_end(&mut encoded)?;
-
-        Self::from_bytes(gfx, encoded.as_slice())
+        Self::from_bytes(gfx, &gfx.fs.read(path)?)
     }
 
     /// Creates a new image initialized with pixel data from a given encoded image (e.g. PNG or JPEG)

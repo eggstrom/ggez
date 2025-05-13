@@ -1,4 +1,4 @@
-use std::{io::Read, marker::PhantomData};
+use std::marker::PhantomData;
 
 use crate::{context::Has, Context, GameError, GameResult};
 
@@ -98,8 +98,7 @@ impl<'a> ShaderBuilder<'a> {
             )
         };
         let load_resource = |path: &str| -> GameResult<Option<wgpu::ShaderModule>> {
-            let mut encoded = Vec::new();
-            _ = gfx.fs.open(path)?.read_to_end(&mut encoded)?;
+            let encoded = gfx.fs.read(path)?;
             Ok(load(
                 &String::from_utf8(encoded).map_err(GameError::ShaderEncodingError)?,
             ))
