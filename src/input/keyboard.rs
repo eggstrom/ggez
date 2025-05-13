@@ -24,7 +24,7 @@
 //!
 //! Example:
 //!
-//! ```rust, compile
+//! ```rust,no_run
 //! use winit::keyboard::{Key, ModifiersState, NamedKey};
 //! use ggez::event::{self, EventHandler};
 //! use ggez::input::keyboard::KeyInput;
