@@ -157,15 +157,12 @@ impl fmt::Debug for Context {
 impl Context {
     /// Tries to create a new Context using settings from the given [`Conf`](../conf/struct.Conf.html) object.
     /// Usually called by [`ContextBuilder::build()`](struct.ContextBuilder.html#method.build).
-    fn from_conf(
-        conf: conf::Conf,
-    ) -> GameResult<(Context, winit::event_loop::EventLoop<()>)> {
+    fn from_conf(conf: conf::Conf) -> GameResult<(Context, winit::event_loop::EventLoop<()>)> {
         #[cfg(feature = "audio")]
         let audio_context = audio::AudioContext::new()?;
         let events_loop = winit::event_loop::EventLoop::new();
         let timer_context = timer::TimeContext::new();
-        let graphics_context =
-            graphics::context::GraphicsContext::new(&events_loop, &conf)?;
+        let graphics_context = graphics::context::GraphicsContext::new(&events_loop, &conf)?;
 
         let ctx = Context {
             conf,
@@ -236,17 +233,6 @@ impl ContextBuilder {
     pub fn build(self) -> GameResult<(Context, winit::event_loop::EventLoop<()>)> {
         Context::from_conf(self.conf)
     }
-}
-
-/// Terminates the [`ggez::event::run()`](crate::event::run) loop _without_ requesting a
-/// [`quit_event`](crate::event::EventHandler::quit_event). [`Context.continuing`](struct.Context.html#structfield.continuing)
-/// is set to `false` and the loop breaks.
-#[deprecated(
-    since = "0.8.0",
-    note = "Use [`ctx.request_quit`](struct.Context.html#method.request_quit) instead."
-)]
-pub fn quit(ctx: &mut Context) {
-    ctx.continuing = false;
 }
 
 #[cfg(test)]

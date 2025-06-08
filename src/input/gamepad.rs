@@ -14,7 +14,6 @@ pub use gilrs::{self, Event, Gamepad, Gilrs};
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct GamepadId(pub(crate) gilrs::GamepadId);
 
-use crate::context::Context;
 use crate::error::GameResult;
 
 /// A structure that contains gamepad state using `gilrs`.
@@ -78,18 +77,6 @@ impl<'a> Iterator for GamepadsIterator<'a> {
     fn next(&mut self) -> Option<(GamepadId, Gamepad<'a>)> {
         self.wrapped.next().map(|(id, gp)| (GamepadId(id), gp))
     }
-}
-
-/// Returns the `Gamepad` associated with an `id`.
-#[deprecated(since = "0.8.0", note = "Use `ctx.gamepad.gamepad` instead")]
-pub fn gamepad(ctx: &Context, id: GamepadId) -> Gamepad {
-    ctx.gamepad.gamepad(id)
-}
-
-/// Return an iterator of all the `Gamepads` that are connected.
-#[deprecated(since = "0.8.0", note = "Use `ctx.gamepad.gamepads` instead")]
-pub fn gamepads(ctx: &Context) -> GamepadsIterator {
-    ctx.gamepad.gamepads()
 }
 
 // Properties gamepads might want:

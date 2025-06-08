@@ -148,67 +148,6 @@ impl Default for MouseContext {
     }
 }
 
-/// Returns the current mouse cursor type of the window.
-#[deprecated(since = "0.8.0", note = "Use `ctx.mouse.cursor_type` instead")]
-pub fn cursor_type(ctx: &Context) -> CursorIcon {
-    ctx.mouse.cursor_type()
-}
-
-/// Set whether or not the mouse is hidden (invisible)
-#[deprecated(since = "0.8.0", note = "Use `ctx.mouse.cursor_hidden` instead")]
-pub fn cursor_hidden(ctx: &Context) -> bool {
-    ctx.mouse.cursor_hidden()
-}
-
-/// Get the current position of the mouse cursor, in pixels.
-/// Complement to [`set_position()`](fn.set_position.html).
-/// Uses strictly window-only coordinates.
-#[deprecated(since = "0.8.0", note = "Use `ctx.mouse.position` instead")]
-pub fn position(ctx: &Context) -> mint::Point2<f32> {
-    ctx.mouse.position()
-}
-
-/// Get the distance the cursor was moved during the current frame, in pixels.
-#[deprecated(since = "0.8.0", note = "Use `ctx.mouse.delta` instead")]
-pub fn delta(ctx: &Context) -> mint::Point2<f32> {
-    ctx.mouse.delta()
-}
-
-/// Returns whether or not the given mouse button is pressed.
-#[deprecated(since = "0.8.0", note = "Use `ctx.mouse.button_pressed` instead")]
-pub fn button_pressed(ctx: &Context, button: MouseButton) -> bool {
-    ctx.mouse.button_pressed(button)
-}
-
-/// Returns whether or not the given mouse button has been pressed this frame.
-#[deprecated(since = "0.8.0", note = "Use `ctx.mouse.button_just_pressed` instead")]
-pub fn button_just_pressed(ctx: &Context, button: MouseButton) -> bool {
-    ctx.mouse.button_just_pressed(button)
-}
-
-/// Returns whether or not the given mouse button has been released this frame.
-#[deprecated(since = "0.8.0", note = "Use `ctx.mouse.button_just_released` instead")]
-pub fn button_just_released(ctx: &Context, button: MouseButton) -> bool {
-    ctx.mouse.button_just_released(button)
-}
-
-/// Updates delta and position values.
-/// The inputs are interpreted as pixel coordinates inside the window.
-///
-/// This function is called internally whenever the mouse moves to a new location.
-/// It can also be used to simulate mouse input.
-/// (It gets called inside the default implementation of the
-/// [`touch_event`](../../event/trait.EventHandler.html#method.touch_event), for example.)
-/// Calling this function alone won't trigger a
-/// [`mouse_motion_event`](../../event/trait.EventHandler.html#method.mouse_motion_event) though.
-/// (Note that the default implementation of
-/// [`touch_event`](../../event/trait.EventHandler.html#method.touch_event) DOES trigger one, but
-/// it does so by invoking it on the `EventHandler` manually.)
-#[deprecated(since = "0.8.0", note = "Use `ctx.mouse.handle_move` instead")]
-pub fn handle_move(ctx: &mut Context, new_x: f32, new_y: f32) {
-    ctx.mouse.handle_move(new_x, new_y);
-}
-
 /// Set whether or not the mouse is hidden (invisible).
 // TODO: Move to graphics context (This isn't input)
 pub fn set_cursor_hidden(ctx: &mut Context, hidden: bool) {

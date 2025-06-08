@@ -107,8 +107,6 @@
 //! }
 //! ```
 
-use crate::context::Context;
-
 use std::collections::HashSet;
 use winit::event::ModifiersState;
 pub use winit::event::ScanCode;
@@ -329,55 +327,6 @@ impl Default for KeyboardContext {
     fn default() -> Self {
         Self::new()
     }
-}
-
-/// Checks if a key is currently pressed down.
-#[deprecated(since = "0.8.0", note = "Use `ctx.keyboard.is_key_pressed` instead")]
-pub fn is_key_pressed(ctx: &Context, key: KeyCode) -> bool {
-    ctx.keyboard.is_key_pressed(key)
-}
-
-/// Checks if a key has been pressed down this frame.
-#[deprecated(
-    since = "0.8.0",
-    note = "Use `ctx.keyboard.is_key_just_pressed` instead"
-)]
-pub fn is_key_just_pressed(ctx: &Context, key: KeyCode) -> bool {
-    ctx.keyboard.is_key_just_pressed(key)
-}
-
-/// Checks if a key has been released this frame.
-#[deprecated(
-    since = "0.8.0",
-    note = "Use `ctx.keyboard.is_key_just_released` instead"
-)]
-pub fn is_key_just_released(ctx: &Context, key: KeyCode) -> bool {
-    ctx.keyboard.is_key_just_released(key)
-}
-
-/// Checks if the last keystroke sent by the system is repeated,
-/// like when a key is held down for a period of time.
-#[deprecated(since = "0.8.0", note = "Use `ctx.keyboard.is_key_repeated` instead")]
-pub fn is_key_repeated(ctx: &Context) -> bool {
-    ctx.keyboard.is_key_repeated()
-}
-
-/// Returns a reference to the set of currently pressed keys.
-#[deprecated(since = "0.8.0", note = "Use `ctx.keyboard.pressed_keys` instead")]
-pub fn pressed_keys(ctx: &Context) -> &HashSet<KeyCode> {
-    ctx.keyboard.pressed_keys()
-}
-
-/// Checks if keyboard modifier (or several) is active.
-#[deprecated(since = "0.8.0", note = "Use `ctx.keyboard.is_mod_active` instead")]
-pub fn is_mod_active(ctx: &Context, keymods: KeyMods) -> bool {
-    ctx.keyboard.is_mod_active(keymods)
-}
-
-/// Returns currently active keyboard modifiers.
-#[deprecated(since = "0.8.0", note = "Use `ctx.keyboard.active_mods` instead")]
-pub fn active_mods(ctx: &Context) -> KeyMods {
-    ctx.keyboard.active_mods()
 }
 
 #[cfg(test)]
