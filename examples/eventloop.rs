@@ -17,7 +17,7 @@ use ggez::GameResult;
 use winit::event_loop::ControlFlow;
 
 pub fn main() -> GameResult {
-    let cb = ggez::ContextBuilder::new("eventloop", "ggez");
+    let cb = ggez::ContextBuilder::new();
     let (mut ctx, events_loop) = cb.build()?;
 
     let mut position: f32 = 1.0;

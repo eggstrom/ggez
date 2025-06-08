@@ -4,8 +4,6 @@ use ggez::glam::*;
 use ggez::graphics::{self, Color, DrawMode, DrawParam};
 use ggez::input::keyboard;
 use ggez::{Context, GameResult};
-use std::env;
-use std::path;
 
 const GRID_INTERVAL: f32 = 100.0;
 const GRID_SIZE: usize = 10;
@@ -113,19 +111,10 @@ impl event::EventHandler<ggez::GameError> for MainState {
 }
 
 pub fn main() -> GameResult {
-    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-        let mut path = path::PathBuf::from(manifest_dir);
-        path.push("resources");
-        path
-    } else {
-        path::PathBuf::from("./resources")
-    };
-    let cb = ggez::ContextBuilder::new("transforms", "ggez")
-        .window_setup(
-            ggez::conf::WindowSetup::default()
-                .title("transforms -- Press spacebar to cycle projection!"),
-        )
-        .add_resource_path(resource_dir);
+    let cb = ggez::ContextBuilder::new().window_setup(
+        ggez::conf::WindowSetup::default()
+            .title("transforms -- Press spacebar to cycle projection!"),
+    );
     let (mut ctx, event_loop) = cb.build()?;
     let state = MainState::new(&mut ctx)?;
     event::run(ctx, event_loop, state)

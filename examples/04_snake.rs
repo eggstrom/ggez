@@ -457,7 +457,7 @@ impl event::EventHandler<ggez::GameError> for GameState {
 
 fn main() -> GameResult {
     // Here we use a ContextBuilder to setup metadata about our game. First the title and author
-    let (ctx, events_loop) = ggez::ContextBuilder::new("snake", "Gray Olson")
+    let (ctx, events_loop) = ggez::ContextBuilder::new()
         // Next we set up the window. This title will be displayed in the title bar of the window.
         .window_setup(ggez::conf::WindowSetup::default().title("Snake!"))
         // Now we get to set the size of the window, which we use our SCREEN_SIZE constant from earlier to help with

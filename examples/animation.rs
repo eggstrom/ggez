@@ -14,8 +14,6 @@ use ggez::{Context, GameResult};
 use keyframe::{ease, functions::*, keyframes, AnimationSequence, EasingFunction};
 use keyframe_derive::CanTween;
 use num_traits::{FromPrimitive, ToPrimitive};
-use std::env;
-use std::path;
 
 struct MainState {
     ball: graphics::Mesh,
@@ -383,15 +381,7 @@ fn new_enum_after_key<E: ToPrimitive + FromPrimitive>(
 }
 
 pub fn main() -> GameResult {
-    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-        let mut path = path::PathBuf::from(manifest_dir);
-        path.push("resources");
-        path
-    } else {
-        path::PathBuf::from("./resources")
-    };
-
-    let cb = ggez::ContextBuilder::new("animation example", "ggez").add_resource_path(resource_dir);
+    let cb = ggez::ContextBuilder::new();
     let (mut ctx, event_loop) = cb.build()?;
     let state = MainState::new(&mut ctx)?;
 

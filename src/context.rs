@@ -158,7 +158,6 @@ impl Context {
     /// Tries to create a new Context using settings from the given [`Conf`](../conf/struct.Conf.html) object.
     /// Usually called by [`ContextBuilder::build()`](struct.ContextBuilder.html#method.build).
     fn from_conf(
-        game_id: &str,
         conf: conf::Conf,
     ) -> GameResult<(Context, winit::event_loop::EventLoop<()>)> {
         #[cfg(feature = "audio")]
@@ -166,7 +165,7 @@ impl Context {
         let events_loop = winit::event_loop::EventLoop::new();
         let timer_context = timer::TimeContext::new();
         let graphics_context =
-            graphics::context::GraphicsContext::new(game_id, &events_loop, &conf)?;
+            graphics::context::GraphicsContext::new(&events_loop, &conf)?;
 
         let ctx = Context {
             conf,
@@ -186,34 +185,17 @@ impl Context {
     }
 }
 
-use std::borrow::Cow;
-use std::path;
-
 /// A builder object for creating a [`Context`](struct.Context.html).
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct ContextBuilder {
-    pub(crate) game_id: String,
-    pub(crate) author: String,
     pub(crate) conf: conf::Conf,
-    pub(crate) resources_dir_name: path::PathBuf,
-    pub(crate) resources_zip_name: path::PathBuf,
-    pub(crate) paths: Vec<path::PathBuf>,
-    pub(crate) memory_zip_files: Vec<Cow<'static, [u8]>>,
-    pub(crate) load_conf_file: bool,
 }
 
 impl ContextBuilder {
     /// Create a new `ContextBuilder` with default settings.
-    pub fn new(game_id: &str, author: &str) -> Self {
+    pub fn new() -> Self {
         Self {
-            game_id: game_id.to_string(),
-            author: author.to_string(),
             conf: conf::Conf::default(),
-            resources_dir_name: "resources".into(),
-            resources_zip_name: "resources.zip".into(),
-            paths: vec![],
-            memory_zip_files: vec![],
-            load_conf_file: true,
         }
     }
 
@@ -250,66 +232,9 @@ impl ContextBuilder {
         self
     }
 
-    /// Sets resources dir name.
-    /// Default resources dir name is `resources`.
-    #[must_use]
-    pub fn resources_dir_name(mut self, new_name: impl Into<path::PathBuf>) -> Self {
-        self.resources_dir_name = new_name.into();
-        self
-    }
-
-    /// Sets resources zip name.
-    /// Default resources dir name is `resources.zip`.
-    #[must_use]
-    pub fn resources_zip_name(mut self, new_name: impl Into<path::PathBuf>) -> Self {
-        self.resources_zip_name = new_name.into();
-        self
-    }
-
-    /// Add a new read-only filesystem path to the places to search
-    /// for resources.
-    #[must_use]
-    pub fn add_resource_path<T>(mut self, path: T) -> Self
-    where
-        T: Into<path::PathBuf>,
-    {
-        self.paths.push(path.into());
-        self
-    }
-
-    /// Add a new zip file from bytes whose contents will be searched
-    /// for resources. The zip file will be stored in-memory.
-    /// You can pass it a static slice, a `Vec` of bytes, etc.
-    ///
-    /// ```ignore
-    /// use ggez::context::ContextBuilder;
-    /// let _ = ContextBuilder::new()
-    ///     .add_zipfile_bytes(include_bytes!("../resources.zip").to_vec())
-    ///     .build();
-    /// ```
-    #[must_use]
-    pub fn add_zipfile_bytes<B>(mut self, bytes: B) -> Self
-    where
-        B: Into<Cow<'static, [u8]>>,
-    {
-        let cow = bytes.into();
-        self.memory_zip_files.push(cow);
-        self
-    }
-
-    /// Specifies whether or not to load the `conf.toml` file if it
-    /// exists and use its settings to override the provided values.
-    /// Defaults to `true` which is usually what you want, but being
-    /// able to fiddle with it is sometimes useful for debugging.
-    #[must_use]
-    pub fn with_conf_file(mut self, load_conf_file: bool) -> Self {
-        self.load_conf_file = load_conf_file;
-        self
-    }
-
     /// Build the `Context`.
     pub fn build(self) -> GameResult<(Context, winit::event_loop::EventLoop<()>)> {
-        Context::from_conf(self.game_id.as_ref(), self.conf)
+        Context::from_conf(self.conf)
     }
 }
 
@@ -335,7 +260,7 @@ mod tests {
     // This will fail when testing if not running using one thread but is actually fine
     #[test]
     fn has_traits() {
-        let (mut ctx, _event_loop) = ContextBuilder::new("test", "ggez").build().unwrap();
+        let (mut ctx, _event_loop) = ContextBuilder::new().build().unwrap();
 
         fn takes_gfx(_gfx: &impl Has<GraphicsContext>) {}
         takes_gfx(&ctx);

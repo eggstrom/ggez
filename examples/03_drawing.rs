@@ -6,7 +6,6 @@ use ggez::{
     graphics::{self, Color},
     Context, GameResult,
 };
-use std::{env, path};
 
 struct MainState {
     image1: graphics::Image,
@@ -187,15 +186,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
 }
 
 pub fn main() -> GameResult {
-    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-        let mut path = path::PathBuf::from(manifest_dir);
-        path.push("resources");
-        path
-    } else {
-        path::PathBuf::from("./resources")
-    };
-
-    let cb = ggez::ContextBuilder::new("drawing", "ggez").add_resource_path(resource_dir);
+    let cb = ggez::ContextBuilder::new();
 
     let (mut ctx, events_loop) = cb.build()?;
 

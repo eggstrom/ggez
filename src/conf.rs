@@ -246,6 +246,24 @@ pub struct WindowSetup {
     /// The window title.
     #[default(String::from("An easy, good game"))]
     pub title: String,
+    /// The window's general name.
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "dragonfly",
+        target_os = "freebsd",
+        target_os = "netbsd",
+        target_os = "openbsd"
+    ))]
+    pub general_name: Option<String>,
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "dragonfly",
+        target_os = "freebsd",
+        target_os = "netbsd",
+        target_os = "openbsd"
+    ))]
+    /// The window's instance name.
+    pub instance_name: Option<String>,
     /// Number of samples to use for multisample anti-aliasing.
     #[default(NumSamples::One)]
     pub samples: NumSamples,
@@ -268,6 +286,21 @@ impl WindowSetup {
     #[must_use]
     pub fn title(mut self, title: &str) -> Self {
         self.title = title.to_owned();
+        self
+    }
+
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "dragonfly",
+        target_os = "freebsd",
+        target_os = "netbsd",
+        target_os = "openbsd"
+    ))]
+    /// Set window's general and instance name.
+    #[must_use]
+    pub fn name(mut self, general: &str, instance: &str) -> Self {
+        self.general_name = Some(general.to_owned());
+        self.instance_name = Some(instance.to_owned());
         self
     }
 

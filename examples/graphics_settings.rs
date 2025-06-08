@@ -14,8 +14,6 @@ use ggez::{Context, GameResult};
 use argh::FromArgs;
 
 use ggez::input::keyboard::KeyInput;
-use std::env;
-use std::path;
 
 type Point2 = ggez::glam::Vec2;
 
@@ -211,18 +209,9 @@ struct Opt {
 
 pub fn main() -> GameResult {
     let opt: Opt = argh::from_env();
-
-    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-        let mut path = path::PathBuf::from(manifest_dir);
-        path.push("resources");
-        path
-    } else {
-        path::PathBuf::from("./resources")
-    };
-
     let backend = conf::Backend::default();
 
-    let cb = ggez::ContextBuilder::new("graphics_settings", "ggez")
+    let cb = ggez::ContextBuilder::new()
         .window_mode(
             conf::WindowMode::default()
                 .fullscreen_type(conf::FullscreenType::Windowed)
@@ -231,8 +220,7 @@ pub fn main() -> GameResult {
         .window_setup(conf::WindowSetup::default().samples(
             conf::NumSamples::try_from(opt.msaa).expect("Option msaa needs to be 1 or 4!"),
         ))
-        .backend(backend)
-        .add_resource_path(resource_dir);
+        .backend(backend);
 
     let (mut ctx, events_loop) = cb.build()?;
 

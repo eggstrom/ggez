@@ -96,11 +96,7 @@ pub struct GraphicsContext {
 impl GraphicsContext {
     #[allow(unsafe_code)]
     /// Create a new graphics context
-    pub fn new(
-        game_id: &str,
-        event_loop: &winit::event_loop::EventLoop<()>,
-        conf: &Conf,
-    ) -> GameResult<Self> {
+    pub fn new(event_loop: &winit::event_loop::EventLoop<()>, conf: &Conf) -> GameResult<Self> {
         let new_instance = |backends| {
             wgpu::Instance::new(wgpu::InstanceDescriptor {
                 backends,
@@ -109,12 +105,7 @@ impl GraphicsContext {
         };
 
         if conf.backend == Backend::All {
-            match Self::new_from_instance(
-                game_id,
-                new_instance(wgpu::Backends::PRIMARY),
-                event_loop,
-                conf,
-            ) {
+            match Self::new_from_instance(new_instance(wgpu::Backends::PRIMARY), event_loop, conf) {
                 Ok(o) => Ok(o),
                 Err(GameError::GraphicsInitializationError) => {
                     println!(
@@ -125,7 +116,6 @@ impl GraphicsContext {
                     );
 
                     Self::new_from_instance(
-                        game_id,
                         new_instance(wgpu::Backends::SECONDARY),
                         event_loop,
                         conf,
@@ -145,7 +135,7 @@ impl GraphicsContext {
                 Backend::BrowserWebGpu => wgpu::Backends::BROWSER_WEBGPU,
             });
 
-            Self::new_from_instance(game_id, instance, event_loop, conf)
+            Self::new_from_instance(instance, event_loop, conf)
         }
     }
 
@@ -222,17 +212,17 @@ impl GraphicsContext {
 
     #[allow(unsafe_code)]
     pub(crate) fn new_from_instance(
-        #[allow(unused_variables)] game_id: &str,
         instance: wgpu::Instance,
         event_loop: &winit::event_loop::EventLoop<()>,
         conf: &Conf,
     ) -> GameResult<Self> {
+        let (mode, setup) = (conf.window_mode, &conf.window_setup);
         let mut window_builder = winit::window::WindowBuilder::new()
-            .with_title(conf.window_setup.title.clone())
-            .with_inner_size(conf.window_mode.actual_size().unwrap()) // Unwrap since actual_size only fails if one of the window dimensions is less than 1
-            .with_resizable(conf.window_mode.resizable)
-            .with_visible(conf.window_mode.visible)
-            .with_transparent(conf.window_mode.transparent);
+            .with_title(setup.title.clone())
+            .with_inner_size(mode.actual_size().unwrap()) // Unwrap since actual_size only fails if one of the window dimensions is less than 1
+            .with_resizable(mode.resizable)
+            .with_visible(mode.visible)
+            .with_transparent(mode.transparent);
 
         #[cfg(any(
             target_os = "linux",
@@ -242,13 +232,15 @@ impl GraphicsContext {
             target_os = "openbsd"
         ))]
         {
+            let general = setup.general_name.as_ref().unwrap_or(&setup.title);
+            let instance = setup.instance_name.as_ref().unwrap_or(&setup.title);
             {
                 use winit::platform::x11::WindowBuilderExtX11;
-                window_builder = window_builder.with_name(game_id, game_id);
+                window_builder = window_builder.with_name(general, instance);
             }
             {
                 use winit::platform::wayland::WindowBuilderExtWayland;
-                window_builder = window_builder.with_name(game_id, game_id);
+                window_builder = window_builder.with_name(general, instance);
             }
         }
 

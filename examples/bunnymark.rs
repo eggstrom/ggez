@@ -1,8 +1,6 @@
 /// Based on the bunnymark example from [`tetra`](https://crates.io/crates/tetra)
 /// which is based on <https://github.com/openfl/openfl-samples/tree/master/demos/BunnyMark>
 /// Original BunnyMark (and sprite) by Iain Lobb
-use std::env;
-use std::path;
 
 use ggez::input::keyboard;
 use oorandom::Rand32;
@@ -172,15 +170,7 @@ impl event::EventHandler<ggez::GameError> for GameState {
 }
 
 fn main() -> GameResult {
-    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-        let mut path = path::PathBuf::from(manifest_dir);
-        path.push("resources");
-        path
-    } else {
-        path::PathBuf::from("./resources")
-    };
-
-    let cb = ggez::ContextBuilder::new("bunnymark", "ggez").add_resource_path(resource_dir);
+    let cb = ggez::ContextBuilder::new();
     let (mut ctx, event_loop) = cb.build()?;
 
     let state = GameState::new(&mut ctx)?;

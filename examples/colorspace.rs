@@ -172,17 +172,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
 }
 
 pub fn main() -> GameResult {
-    use std::env;
-    use std::path;
-    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-        let mut path = path::PathBuf::from(manifest_dir);
-        path.push("resources");
-        path
-    } else {
-        path::PathBuf::from("./resources")
-    };
-
-    let cb = ggez::ContextBuilder::new("colorspace", "ggez").add_resource_path(resource_dir);
+    let cb = ggez::ContextBuilder::new();
     let (mut ctx, event_loop) = cb.build()?;
 
     let state = MainState::new(&mut ctx)?;

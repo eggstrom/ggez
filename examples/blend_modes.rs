@@ -11,8 +11,6 @@ use ggez::glam::Vec2;
 use ggez::graphics::{self, BlendMode, Color, DrawParam, GraphicsContext};
 use ggez::input::keyboard::KeyInput;
 use ggez::{Context, GameResult};
-use std::env;
-use std::path;
 
 struct MainState {
     layer: graphics::ScreenImage,
@@ -192,21 +190,12 @@ impl EventHandler for MainState {
 }
 
 pub fn main() -> GameResult {
-    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-        let mut path = path::PathBuf::from(manifest_dir);
-        path.push("resources");
-        path
-    } else {
-        path::PathBuf::from("./resources")
-    };
-
-    let cb = ggez::ContextBuilder::new("blend_modes", "ggez")
+    let cb = ggez::ContextBuilder::new()
         .window_mode(ggez::conf::WindowMode::default().dimensions(1400., 600.))
         .window_setup(
             ggez::conf::WindowSetup::default()
                 .title("blend modes -- Press a button to change the canvas blend mode!"),
-        )
-        .add_resource_path(resource_dir);
+        );
     let (mut ctx, event_loop) = cb.build()?;
     let state = MainState::new(&mut ctx)?;
     event::run(ctx, event_loop, state)

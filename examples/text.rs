@@ -11,7 +11,6 @@ use ggez::{event, graphics::TextLayout};
 use ggez::{Context, ContextBuilder, GameResult};
 use std::collections::BTreeMap;
 use std::env;
-use std::path;
 
 /// Creates a random RGB color.
 fn random_color(rng: &mut oorandom::Rand32) -> Color {
@@ -203,22 +202,13 @@ pub fn main() -> GameResult {
              e.g. use `cargo run --example text --release`"
         );
     }
-    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-        let mut path = path::PathBuf::from(manifest_dir);
-        path.push("resources");
-        path
-    } else {
-        path::PathBuf::from("./resources")
-    };
-
-    let (mut ctx, events_loop) = ContextBuilder::new("text_cached", "ggez")
+    let (mut ctx, events_loop) = ContextBuilder::new()
         .window_setup(WindowSetup::default().title("Cached text example!"))
         .window_mode(
             WindowMode::default()
                 .dimensions(640.0, 480.0)
                 .resizable(true),
         )
-        .add_resource_path(resource_dir)
         .build()?;
 
     let state = App::new(&mut ctx)?;

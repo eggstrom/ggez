@@ -180,7 +180,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
 }
 
 pub fn main() -> GameResult {
-    let cb = ggez::ContextBuilder::new("input_test", "ggez").window_mode(
+    let cb = ggez::ContextBuilder::new().window_mode(
         conf::WindowMode::default()
             .fullscreen_type(conf::FullscreenType::Windowed)
             .resizable(true),

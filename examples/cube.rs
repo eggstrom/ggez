@@ -9,9 +9,7 @@ use ggez::event;
 use ggez::glam::*;
 use ggez::graphics;
 use ggez::{Context, GameResult};
-use std::env;
 use std::f32;
-use std::path;
 use wgpu::util::DeviceExt;
 
 type Isometry3 = Mat4;
@@ -347,15 +345,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
 }
 
 pub fn main() -> GameResult {
-    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-        let mut path = path::PathBuf::from(manifest_dir);
-        path.push("resources");
-        path
-    } else {
-        path::PathBuf::from("./resources")
-    };
-
-    let cb = ggez::ContextBuilder::new("cube", "ggez").add_resource_path(resource_dir);
+    let cb = ggez::ContextBuilder::new();
 
     let (mut ctx, events_loop) = cb.build()?;
     let state = MainState::new(&mut ctx);
