@@ -35,9 +35,6 @@ pub struct Canvas {
     target: Image,
     resolve: Option<Image>,
     clear: Option<Color>,
-
-    // This will be removed after queue_text and draw_queued_text have been removed.
-    pub(crate) queued_texts: Vec<(Text, mint::Point2<f32>, Option<Color>)>,
 }
 
 impl Canvas {
@@ -151,12 +148,9 @@ impl Canvas {
             target,
             resolve,
             clear,
-
-            queued_texts: Vec::new(),
         };
 
         this.set_screen_coordinates(screen);
-
         this
     }
 
