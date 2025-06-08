@@ -2,7 +2,7 @@ use super::{
     context::{FrameArenas, GraphicsContext},
     draw::{DrawParam, DrawUniforms},
     gpu::{
-        arc::{ArcBindGroup, ArcBindGroupLayout, ArcBuffer, ArcShaderModule, ArcTextureView},
+        arc::{ArcBindGroup, ArcBindGroupLayout, ArcShaderModule, ArcTextureView},
         bind_group::{BindGroupBuilder, BindGroupCache, BindGroupLayoutBuilder},
         growing::{ArenaAllocation, GrowingBufferArena},
         pipeline::{PipelineCache, RenderPipelineInfo},
@@ -640,7 +640,7 @@ impl<'a> InternalCanvas<'a> {
             || self
                 .curr_image
                 .as_ref()
-                .map_or(true, |curr| curr.id() != image.view.id())
+                .is_none_or(|curr| curr.id() != image.view.id())
         {
             self.curr_sampler = self.next_sampler;
             let sample = self.sampler_cache.get(&self.wgpu.device, self.curr_sampler);
@@ -658,7 +658,7 @@ impl<'a> InternalCanvas<'a> {
             || self
                 .curr_image
                 .as_ref()
-                .map_or(true, |curr| curr.id() != view.id())
+                .is_none_or(|curr| curr.id() != view.id())
         {
             self.curr_sampler = self.next_sampler;
 
@@ -686,8 +686,6 @@ impl<'a> Drop for InternalCanvas<'a> {
 
 #[derive(Debug)]
 pub struct InstanceArrayView {
-    pub buffer: ArcBuffer,
-    pub indices: ArcBuffer,
     pub bind_group: ArcBindGroup,
     pub image: Image,
     pub len: u32,
@@ -697,8 +695,6 @@ pub struct InstanceArrayView {
 impl InstanceArrayView {
     pub fn from_instances(ia: &InstanceArray) -> GameResult<Self> {
         Ok(InstanceArrayView {
-            buffer: ia.buffer.lock().map_err(|_| GameError::LockError)?.clone(),
-            indices: ia.indices.lock().map_err(|_| GameError::LockError)?.clone(),
             bind_group: ia
                 .bind_group
                 .lock()

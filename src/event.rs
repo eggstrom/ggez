@@ -278,9 +278,9 @@ where
 /// It does not try to do any type of framerate limiting.  See the
 /// documentation for the [`timer`](../timer/index.html) module for more info.
 #[allow(clippy::needless_return)] // necessary as the returns used here are actually necessary to break early from the event loop
-pub fn run<S: 'static, E>(mut ctx: Context, event_loop: EventLoop<()>, mut state: S) -> !
+pub fn run<S, E>(mut ctx: Context, event_loop: EventLoop<()>, mut state: S) -> !
 where
-    S: EventHandler<E>,
+    S: EventHandler<E> + 'static,
     E: std::fmt::Debug,
 {
     event_loop.run(move |mut event, _, control_flow| {
@@ -577,7 +577,7 @@ where
     })
 }
 
-fn catch_error<T, E, S: 'static>(
+fn catch_error<T, E, S>(
     ctx: &mut Context,
     event_result: Result<T, E>,
     state: &mut S,
@@ -585,7 +585,7 @@ fn catch_error<T, E, S: 'static>(
     origin: ErrorOrigin,
 ) -> bool
 where
-    S: EventHandler<E>,
+    S: EventHandler<E> + 'static,
     E: std::fmt::Debug,
 {
     if let Err(e) = event_result {
