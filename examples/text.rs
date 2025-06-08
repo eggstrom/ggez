@@ -65,7 +65,7 @@ impl App {
         // This loads a new TrueType font into the context named "Fancy font".
         ctx.gfx.add_font(
             "Fancy font",
-            graphics::FontData::from_path(ctx, "/Tangerine_Regular.ttf")?,
+            graphics::FontData::from_path("/Tangerine_Regular.ttf")?,
         );
 
         // `Font` is really only an integer handle, and can be copied around.

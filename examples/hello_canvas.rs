@@ -21,7 +21,7 @@ impl MainState {
         // will mount that directory so we can omit it in the path here.
         ctx.gfx.add_font(
             "LiberationMono",
-            graphics::FontData::from_path(ctx, "/LiberationMono-Regular.ttf")?,
+            graphics::FontData::from_path("/LiberationMono-Regular.ttf")?,
         );
         let canvas_image = graphics::ScreenImage::new(ctx, None, 1., 1., 1);
 

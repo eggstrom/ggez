@@ -6,6 +6,7 @@
 #![cfg(feature = "audio")]
 
 use std::fmt;
+use std::fs::File;
 use std::io;
 use std::io::Read;
 use std::mem;
@@ -18,29 +19,25 @@ use std::sync::Arc;
 use crate::context::Has;
 use crate::error::GameError;
 use crate::error::GameResult;
-use crate::filesystem::Filesystem;
-use crate::filesystem::InternalClone;
 
 /// A struct that contains all information for tracking sound info.
 ///
 /// You generally don't have to create this yourself, it will be part
 /// of your `Context` object.
 pub struct AudioContext {
-    fs: Filesystem,
     _stream: rodio::OutputStream,
     stream_handle: rodio::OutputStreamHandle,
 }
 
 impl AudioContext {
     /// Create new `AudioContext`.
-    pub fn new(fs: &Filesystem) -> GameResult<Self> {
+    pub fn new() -> GameResult<Self> {
         let (stream, stream_handle) = rodio::OutputStream::try_default().map_err(|_e| {
             GameError::AudioError(String::from(
                 "Could not initialize sound system using default output device (for some reason)",
             ))
         })?;
         Ok(Self {
-            fs: InternalClone::clone(fs),
             _stream: stream,
             stream_handle,
         })
@@ -67,10 +64,9 @@ pub struct SoundData(Arc<[u8]>);
 
 impl SoundData {
     /// Load the file at the given path and create a new `SoundData` from it.
-    pub fn new<P: AsRef<path::Path>>(fs: &impl Has<Filesystem>, path: P) -> GameResult<Self> {
-        let fs = fs.retrieve();
+    pub fn new<P: AsRef<path::Path>>(path: P) -> GameResult<Self> {
         let path = path.as_ref();
-        let file = &mut fs.open(path)?;
+        let file = &mut File::open(path)?;
         SoundData::from_read(file)
     }
 
@@ -289,7 +285,7 @@ impl Source {
     pub fn new<P: AsRef<path::Path>>(ctxs: &impl Has<AudioContext>, path: P) -> GameResult<Self> {
         let audio = ctxs.retrieve();
         let path = path.as_ref();
-        let data = SoundData::new(&audio.fs, path)?;
+        let data = SoundData::new(path)?;
         Source::from_data(audio, data)
     }
 
@@ -453,13 +449,9 @@ pub struct SpatialSource {
 
 impl SpatialSource {
     /// Create a new `SpatialSource` from the given file.
-    pub fn new<P: AsRef<path::Path>>(
-        fs: &impl Has<Filesystem>,
-        audio: &impl Has<AudioContext>,
-        path: P,
-    ) -> GameResult<Self> {
+    pub fn new<P: AsRef<path::Path>>(audio: &impl Has<AudioContext>, path: P) -> GameResult<Self> {
         let path = path.as_ref();
-        let data = SoundData::new(fs, path)?;
+        let data = SoundData::new(path)?;
         SpatialSource::from_data(audio, data)
     }
 

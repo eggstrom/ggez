@@ -322,8 +322,6 @@ struct MainState {
 
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
-        println!("Game resource path: {:?}", ctx.fs);
-
         print_instructions();
 
         // Seed our RNG

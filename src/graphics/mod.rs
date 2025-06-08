@@ -95,7 +95,7 @@ pub fn set_window_icon<P: AsRef<Path>>(
     path: impl Into<Option<P>>,
 ) -> GameResult {
     let gfx: &GraphicsContext = ctx.retrieve();
-    gfx.set_window_icon(&gfx.fs, path)
+    gfx.set_window_icon(path)
 }
 
 /// Sets the window position.

@@ -199,11 +199,9 @@ pub mod conf;
 pub mod context;
 pub mod error;
 pub mod event;
-pub mod filesystem;
 pub mod graphics;
 pub mod input;
 pub mod timer;
-mod vfs;
 
 pub use crate::context::{winit, Context, ContextBuilder};
 pub use crate::error::*;

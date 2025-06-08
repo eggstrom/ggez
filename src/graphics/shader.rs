@@ -1,5 +1,5 @@
-use std::io::Read;
 use std::marker::PhantomData;
+use std::{fs::File, io::Read};
 
 use crate::{context::Has, Context, GameError, GameResult};
 
@@ -102,7 +102,7 @@ impl<'a> ShaderBuilder<'a> {
         };
         let load_resource = |path: &str| -> GameResult<Option<ArcShaderModule>> {
             let mut encoded = Vec::new();
-            _ = gfx.fs.open(path)?.read_to_end(&mut encoded)?;
+            _ = File::open(path)?.read_to_end(&mut encoded)?;
             Ok(load(
                 &String::from_utf8(encoded).map_err(GameError::ShaderEncodingError)?,
             ))

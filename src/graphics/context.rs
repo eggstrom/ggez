@@ -18,16 +18,14 @@ use super::{
 };
 use crate::{
     conf::{self, Backend, Conf, FullscreenType, WindowMode},
-    context::Has,
     error::GameResult,
-    filesystem::{Filesystem, InternalClone},
     graphics::gpu::{bind_group::BindGroupLayoutBuilder, pipeline::RenderPipelineInfo},
     GameError,
 };
 use ::image as imgcrate;
 use crevice::std140::AsStd140;
 use glyph_brush::FontId;
-use std::{collections::HashMap, path::Path, sync::Arc};
+use std::{collections::HashMap, fs::File, path::Path, sync::Arc};
 use typed_arena::Arena as TypedArena;
 use winit::{
     self,
@@ -92,8 +90,6 @@ pub struct GraphicsContext {
     pub(crate) white_image: Image,
     pub(crate) instance_bind_layout: ArcBindGroupLayout,
 
-    pub(crate) fs: Filesystem,
-
     bind_group: Option<(Vec<BindGroupEntryKey>, ArcBindGroup)>,
 }
 
@@ -104,7 +100,6 @@ impl GraphicsContext {
         game_id: &str,
         event_loop: &winit::event_loop::EventLoop<()>,
         conf: &Conf,
-        filesystem: &Filesystem,
     ) -> GameResult<Self> {
         let new_instance = |backends| {
             wgpu::Instance::new(wgpu::InstanceDescriptor {
@@ -119,7 +114,6 @@ impl GraphicsContext {
                 new_instance(wgpu::Backends::PRIMARY),
                 event_loop,
                 conf,
-                filesystem,
             ) {
                 Ok(o) => Ok(o),
                 Err(GameError::GraphicsInitializationError) => {
@@ -135,7 +129,6 @@ impl GraphicsContext {
                         new_instance(wgpu::Backends::SECONDARY),
                         event_loop,
                         conf,
-                        filesystem,
                     )
                 }
                 Err(e) => Err(e),
@@ -152,7 +145,7 @@ impl GraphicsContext {
                 Backend::BrowserWebGpu => wgpu::Backends::BROWSER_WEBGPU,
             });
 
-            Self::new_from_instance(game_id, instance, event_loop, conf, filesystem)
+            Self::new_from_instance(game_id, instance, event_loop, conf)
         }
     }
 
@@ -233,7 +226,6 @@ impl GraphicsContext {
         instance: wgpu::Instance,
         event_loop: &winit::event_loop::EventLoop<()>,
         conf: &Conf,
-        filesystem: &Filesystem,
     ) -> GameResult<Self> {
         let mut window_builder = winit::window::WindowBuilder::new()
             .with_title(conf.window_setup.title.clone())
@@ -267,7 +259,7 @@ impl GraphicsContext {
         }
 
         window_builder = if !conf.window_setup.icon.is_empty() {
-            let icon = load_icon(conf.window_setup.icon.as_ref(), filesystem)?;
+            let icon = load_icon(conf.window_setup.icon.as_ref())?;
             window_builder.with_window_icon(Some(icon))
         } else {
             window_builder
@@ -469,8 +461,6 @@ impl GraphicsContext {
             white_image,
             instance_bind_layout,
 
-            fs: InternalClone::clone(filesystem),
-
             bind_group: None,
         };
 
@@ -575,14 +565,9 @@ impl GraphicsContext {
     }
 
     /// Sets the window icon. `None` for path removes the icon.
-    pub fn set_window_icon<P: AsRef<Path>>(
-        &self,
-        filesystem: &impl Has<Filesystem>,
-        path: impl Into<Option<P>>,
-    ) -> GameResult {
-        let filesystem = filesystem.retrieve();
+    pub fn set_window_icon<P: AsRef<Path>>(&self, path: impl Into<Option<P>>) -> GameResult {
         let icon = match path.into() {
-            Some(p) => Some(load_icon(p.as_ref(), filesystem)?),
+            Some(p) => Some(load_icon(p.as_ref())?),
             None => None,
         };
         self.window.set_window_icon(icon);
@@ -862,15 +847,12 @@ impl GraphicsContext {
 // but still better than
 // having `winit` try to do the image loading for us.
 // see https://github.com/tomaka/winit/issues/661
-pub(crate) fn load_icon(
-    icon_file: &Path,
-    filesystem: &Filesystem,
-) -> GameResult<winit::window::Icon> {
+pub(crate) fn load_icon(icon_file: &Path) -> GameResult<winit::window::Icon> {
     use std::io::Read;
     use winit::window::Icon;
 
     let mut buf = Vec::new();
-    let mut reader = filesystem.open(icon_file)?;
+    let mut reader = File::open(icon_file)?;
     let _ = reader.read_to_end(&mut buf)?;
     let i = imgcrate::load_from_memory(&buf)?;
     let image_data = i.to_rgba8();

@@ -12,7 +12,7 @@ impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
         ctx.gfx.add_font(
             "LiberationMono",
-            graphics::FontData::from_path(ctx, "/LiberationMono-Regular.ttf")?,
+            graphics::FontData::from_path("/LiberationMono-Regular.ttf")?,
         );
 
         let s = MainState { frames: 0 };

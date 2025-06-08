@@ -9,7 +9,6 @@ pub use winit;
 use crate::audio;
 use crate::conf;
 use crate::error::GameResult;
-use crate::filesystem::Filesystem;
 use crate::graphics;
 use crate::graphics::GraphicsContext;
 use crate::input;
@@ -36,8 +35,6 @@ use crate::timer;
 /// can't. Now that `ggez`'s module-level functions, taking the whole `Context`
 /// have been deprecated, calling their methods directly is recommended.
 pub struct Context {
-    /// Filesystem state.
-    pub fs: Filesystem,
     /// Graphics state.
     pub gfx: GraphicsContext,
     /// Timer state.
@@ -113,13 +110,6 @@ impl<T> Has<T> for T {
     }
 }
 
-impl Has<Filesystem> for Context {
-    #[inline]
-    fn retrieve(&self) -> &Filesystem {
-        &self.fs
-    }
-}
-
 impl Has<GraphicsContext> for Context {
     #[inline]
     fn retrieve(&self) -> &GraphicsContext {
@@ -170,18 +160,16 @@ impl Context {
     fn from_conf(
         game_id: &str,
         conf: conf::Conf,
-        fs: Filesystem,
     ) -> GameResult<(Context, winit::event_loop::EventLoop<()>)> {
         #[cfg(feature = "audio")]
-        let audio_context = audio::AudioContext::new(&fs)?;
+        let audio_context = audio::AudioContext::new()?;
         let events_loop = winit::event_loop::EventLoop::new();
         let timer_context = timer::TimeContext::new();
         let graphics_context =
-            graphics::context::GraphicsContext::new(game_id, &events_loop, &conf, &fs)?;
+            graphics::context::GraphicsContext::new(game_id, &events_loop, &conf)?;
 
         let ctx = Context {
             conf,
-            fs,
             gfx: graphics_context,
             continuing: true,
             quit_requested: false,
@@ -321,28 +309,7 @@ impl ContextBuilder {
 
     /// Build the `Context`.
     pub fn build(self) -> GameResult<(Context, winit::event_loop::EventLoop<()>)> {
-        let fs = Filesystem::new(
-            self.game_id.as_ref(),
-            self.author.as_ref(),
-            &self.resources_dir_name,
-            &self.resources_zip_name,
-        )?;
-
-        for path in &self.paths {
-            fs.mount(path, true);
-        }
-
-        for zipfile_bytes in self.memory_zip_files {
-            fs.add_zip_file(std::io::Cursor::new(zipfile_bytes))?;
-        }
-
-        let config = if self.load_conf_file {
-            fs.read_config().unwrap_or(self.conf)
-        } else {
-            self.conf
-        };
-
-        Context::from_conf(self.game_id.as_ref(), config, fs)
+        Context::from_conf(self.game_id.as_ref(), self.conf)
     }
 }
 

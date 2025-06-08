@@ -2,9 +2,9 @@ use super::{
     gpu::text::{Extra, TextRenderer},
     Canvas, Color, Draw, DrawParam, Drawable, GraphicsContext, Rect,
 };
-use crate::{context::Has, filesystem::Filesystem, GameError, GameResult};
+use crate::{context::Has, GameError, GameResult};
 use glyph_brush::{ab_glyph, FontId, GlyphCruncher};
-use std::{collections::HashMap, io::Read, path::Path};
+use std::{collections::HashMap, fs::File, io::Read, path::Path};
 
 /// Font data that can be used to create a new font in [`GraphicsContext`].
 #[derive(Debug)]
@@ -15,11 +15,9 @@ pub struct FontData {
 impl FontData {
     /// Loads font data from a given path in the filesystem.
     #[allow(unused_results)]
-    pub fn from_path(fs: &impl Has<Filesystem>, path: impl AsRef<Path>) -> GameResult<Self> {
-        let fs = fs.retrieve();
-
+    pub fn from_path(path: impl AsRef<Path>) -> GameResult<Self> {
         let mut bytes = vec![];
-        fs.open(path)?.read_to_end(&mut bytes)?;
+        File::open(path)?.read_to_end(&mut bytes)?;
         Ok(FontData {
             font: ab_glyph::FontArc::try_from_vec(bytes)?,
         })

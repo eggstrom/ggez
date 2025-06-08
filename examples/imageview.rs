@@ -42,8 +42,6 @@ impl MainState {
     }
 
     fn new(ctx: &mut Context) -> GameResult<MainState> {
-        ctx.fs.print_all();
-
         let image = graphics::Image::from_path(ctx, "/dragon1.png")?;
 
         let mut sound = audio::Source::new(ctx, "/sound.ogg")?;

@@ -10,6 +10,7 @@ use crate::{context::Has, Context, GameError, GameResult};
 use image::ImageEncoder;
 use std::{
     collections::BTreeMap,
+    fs::File,
     io::Read,
     path::Path,
     sync::{Arc, RwLock},
@@ -137,7 +138,7 @@ impl Image {
         let gfx = gfx.retrieve();
 
         let mut encoded = Vec::new();
-        gfx.fs.open(path)?.read_to_end(&mut encoded)?;
+        File::open(path)?.read_to_end(&mut encoded)?;
 
         Self::from_bytes(gfx, encoded.as_slice())
     }
@@ -297,7 +298,7 @@ impl Image {
         };
 
         let pixels = self.to_pixels(ctx)?;
-        let f = ctx.fs.create(path)?;
+        let f = File::create(path)?;
         let writer = &mut std::io::BufWriter::new(f);
 
         match format {

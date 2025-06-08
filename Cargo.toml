@@ -35,7 +35,6 @@ gamepad = ["gilrs"]
 [dependencies]
 bitflags = "2.1"
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
-directories = "5.0"
 wgpu = "0.16"
 glyph_brush = "0.7"
 winit = { version = "0.28.3", features = ["serde"] }
@@ -67,7 +66,6 @@ gilrs = { version = "0.10", optional = true }
 approx = "0.5"
 bytemuck = { version = "1.12", features = ["derive"] }
 pollster = "0.3"
-memoffset = "0.8"
 crevice = "0.13"
 typed-arena = "2.0"
 ordered-float = "3.3"
