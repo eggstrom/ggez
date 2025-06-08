@@ -13,14 +13,13 @@
 //! passed to the [`ContextBuilder`](../struct.ContextBuilder.html).
 
 use std::convert::TryFrom;
-use std::io;
 
 use winit::dpi::PhysicalSize;
 
 use crate::error::{GameError, GameResult};
 
 /// Possible fullscreen modes.
-#[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum FullscreenType {
     /// Windowed mode.
     Windowed,
@@ -60,9 +59,7 @@ pub enum FullscreenType {
 /// }
 /// # , WindowMode::default());}
 /// ```
-#[derive(
-    Debug, Copy, Clone, smart_default::SmartDefault, serde::Serialize, serde::Deserialize, PartialEq,
-)]
+#[derive(Debug, Copy, Clone, smart_default::SmartDefault, PartialEq)]
 pub struct WindowMode {
     /// Window width in physical pixels
     #[default = 800.0]
@@ -239,9 +236,7 @@ impl WindowMode {
 /// }
 /// # , WindowSetup::default()); }
 /// ```
-#[derive(
-    Debug, Clone, smart_default::SmartDefault, serde::Serialize, serde::Deserialize, PartialEq, Eq,
-)]
+#[derive(Debug, Clone, smart_default::SmartDefault, PartialEq, Eq)]
 pub struct WindowSetup {
     /// The window title.
     #[default(String::from("An easy, good game"))]
@@ -335,17 +330,7 @@ impl WindowSetup {
 
 /// Possible graphics backends.
 /// The default is `Primary`.
-#[derive(
-    Debug,
-    Copy,
-    Clone,
-    serde::Serialize,
-    serde::Deserialize,
-    PartialEq,
-    Eq,
-    smart_default::SmartDefault,
-)]
-#[serde(tag = "type")]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, smart_default::SmartDefault)]
 pub enum Backend {
     /// Includes [`Backend::OnlyPrimary`] and also secondary APIs consisting of OpenGL and DX11.
     ///
@@ -371,7 +356,7 @@ pub enum Backend {
 }
 
 /// The possible number of samples for multisample anti-aliasing.
-#[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum NumSamples {
     /// One sample
     One = 1,
@@ -426,9 +411,7 @@ impl From<NumSamples> for u8 {
 /// }
 /// # , Conf::default()); }
 /// ```
-#[derive(
-    serde::Serialize, serde::Deserialize, Debug, PartialEq, smart_default::SmartDefault, Clone,
-)]
+#[derive(Debug, PartialEq, smart_default::SmartDefault, Clone)]
 pub struct Conf {
     /// Window setting information that can be set at runtime
     pub window_mode: WindowMode,
@@ -444,23 +427,6 @@ impl Conf {
         Self::default()
     }
 
-    /// Load a TOML file from the given `Read` and attempts to parse
-    /// a `Conf` from it.
-    pub fn from_toml_file<R: io::Read>(file: &mut R) -> GameResult<Conf> {
-        let mut s = String::new();
-        let _ = file.read_to_string(&mut s)?;
-        let decoded = toml::from_str(&s)?;
-        Ok(decoded)
-    }
-
-    /// Saves the `Conf` to the given `Write` object,
-    /// formatted as TOML.
-    pub fn to_toml_file<W: io::Write>(&self, file: &mut W) -> GameResult {
-        let s = toml::to_vec(self)?;
-        file.write_all(&s)?;
-        Ok(())
-    }
-
     /// Sets the window mode
     #[must_use]
     pub fn window_mode(mut self, window_mode: WindowMode) -> Self {
@@ -473,22 +439,5 @@ impl Conf {
     pub fn backend(mut self, backend: Backend) -> Self {
         self.backend = backend;
         self
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::conf;
-
-    /// Tries to encode and decode a `Conf` object
-    /// and makes sure it gets the same result it had.
-    #[test]
-    fn headless_encode_round_trip() {
-        let c1 = conf::Conf::new();
-        let mut writer = Vec::new();
-        c1.to_toml_file(&mut writer).unwrap();
-        let mut reader = writer.as_slice();
-        let c2 = conf::Conf::from_toml_file(&mut reader).unwrap();
-        assert_eq!(c1, c2);
     }
 }

@@ -37,7 +37,7 @@ bitflags = "2.1"
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
 wgpu = "0.16"
 glyph_brush = "0.7"
-winit = { version = "0.28.3", features = ["serde"] }
+winit = { version = "0.28.3" }
 image = { version = "0.24", default-features = false, features = [
    "gif",
    "png",
@@ -54,8 +54,6 @@ rodio = { version = "0.17", optional = true, default-features = false, features 
    "vorbis",
    "wav",
 ] }
-serde = { version = "1.0", features = ["derive"] }
-toml = "0.5"
 log = "0.4"
 lyon = "1.0"
 smart-default = "0.7"
