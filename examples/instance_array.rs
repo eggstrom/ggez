@@ -16,7 +16,8 @@ struct MainState {
 
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
-        let image = graphics::Image::from_path(ctx, "/tile.png")?;
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources");
+        let image = graphics::Image::from_path(ctx, format!("{resources_dir}/tile.png"))?;
         let mut instances = graphics::InstanceArray::new(ctx, image);
         instances.resize(ctx, 150 * 150);
         Ok(MainState { instances })

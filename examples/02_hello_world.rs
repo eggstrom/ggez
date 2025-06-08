@@ -9,9 +9,10 @@ struct MainState {
 
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources").to_string();
         ctx.gfx.add_font(
             "LiberationMono",
-            graphics::FontData::from_path("/LiberationMono-Regular.ttf")?,
+            graphics::FontData::from_path(format!("{resources_dir}/LiberationMono-Regular.ttf"))?,
         );
 
         let s = MainState { frames: 0 };

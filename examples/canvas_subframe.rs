@@ -20,7 +20,8 @@ struct MainState {
 
 impl MainState {
     fn new(ctx: &mut Context) -> MainState {
-        let image = graphics::Image::from_path(ctx, "/tile.png").unwrap();
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources");
+        let image = graphics::Image::from_path(ctx, format!("{resources_dir}/tile.png")).unwrap();
         let mut instances = graphics::InstanceArray::new(ctx, image);
         instances.resize(ctx, 150 * 150);
         let canvas_image = graphics::ScreenImage::new(ctx, None, 1., 1., 1);

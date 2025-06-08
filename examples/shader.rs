@@ -20,8 +20,9 @@ struct MainState {
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
         let dim = Dim { rate: 0.5 };
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources");
         let shader = graphics::ShaderBuilder::new()
-            .fragment_path("/dimmer.wgsl")
+            .fragment_path(&format!("{resources_dir}/dimmer.wgsl"))
             .build(&ctx.gfx)?;
         let params = graphics::ShaderParamsBuilder::new(&dim).build(ctx);
         Ok(MainState {

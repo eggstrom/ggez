@@ -244,12 +244,14 @@ struct Assets {
 
 impl Assets {
     fn new(ctx: &mut Context) -> GameResult<Assets> {
-        let player_image = graphics::Image::from_path(ctx, "/player.png")?;
-        let shot_image = graphics::Image::from_path(ctx, "/shot.png")?;
-        let rock_image = graphics::Image::from_path(ctx, "/rock.png")?;
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources").to_string();
 
-        let shot_sound = audio::Source::new(ctx, "/pew.ogg")?;
-        let hit_sound = audio::Source::new(ctx, "/boom.ogg")?;
+        let player_image = graphics::Image::from_path(ctx, format!("{resources_dir}/player.png"))?;
+        let shot_image = graphics::Image::from_path(ctx, format!("{resources_dir}/shot.png"))?;
+        let rock_image = graphics::Image::from_path(ctx, format!("{resources_dir}/rock.png"))?;
+
+        let shot_sound = audio::Source::new(ctx, format!("{resources_dir}/pew.ogg"))?;
+        let hit_sound = audio::Source::new(ctx, format!("{resources_dir}/boom.ogg"))?;
 
         Ok(Assets {
             player_image,

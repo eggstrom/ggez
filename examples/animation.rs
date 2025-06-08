@@ -232,7 +232,8 @@ impl MainState {
             Color::WHITE,
         )?;
 
-        let img = graphics::Image::from_path(ctx, "/player_sheet.png")?;
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources").to_string();
+        let img = graphics::Image::from_path(ctx, format!("{resources_dir}/player_sheet.png"))?;
         let s = MainState {
             ball,
             spritesheet: img,

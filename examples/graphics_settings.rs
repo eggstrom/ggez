@@ -33,10 +33,11 @@ struct MainState {
 
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources");
         let s = MainState {
             angle: 0.0,
             zoom: 1.0,
-            image: graphics::Image::from_path(ctx, "/tile.png")?,
+            image: graphics::Image::from_path(ctx, format!("{resources_dir}/tile.png"))?,
             window_settings: WindowSettings {
                 toggle_fullscreen: false,
                 is_fullscreen: false,

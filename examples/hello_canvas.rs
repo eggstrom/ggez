@@ -15,11 +15,10 @@ struct MainState {
 
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
-        // The ttf file will be in your resources directory. Later, we
-        // will mount that directory so we can omit it in the path here.
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources");
         ctx.gfx.add_font(
             "LiberationMono",
-            graphics::FontData::from_path("/LiberationMono-Regular.ttf")?,
+            graphics::FontData::from_path(format!("{resources_dir}/LiberationMono-Regular.ttf"))?,
         );
         let canvas_image = graphics::ScreenImage::new(ctx, None, 1., 1., 1);
 

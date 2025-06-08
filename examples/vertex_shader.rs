@@ -26,8 +26,9 @@ impl MainState {
             graphics::Rect::new(0.0, 0.0, 400.0, 400.0),
             Color::WHITE,
         )?;
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources");
         let shader = graphics::ShaderBuilder::new()
-            .vertex_path("/vertex.wgsl")
+            .vertex_path(&format!("{resources_dir}/vertex.wgsl"))
             .build(ctx)?;
         let shader_params = graphics::ShaderParamsBuilder::new(&ShaderUniforms {
             rotation: Mat4::IDENTITY.into(),

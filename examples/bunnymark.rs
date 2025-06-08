@@ -1,7 +1,6 @@
 /// Based on the bunnymark example from [`tetra`](https://crates.io/crates/tetra)
 /// which is based on <https://github.com/openfl/openfl-samples/tree/master/demos/BunnyMark>
 /// Original BunnyMark (and sprite) by Iain Lobb
-
 use ggez::input::keyboard;
 use oorandom::Rand32;
 
@@ -52,7 +51,8 @@ impl GameState {
     fn new(ctx: &mut Context) -> ggez::GameResult<GameState> {
         // We just use the same RNG seed every time.
         let mut rng = Rand32::new(12345);
-        let texture = Image::from_path(ctx, "/wabbit_alpha.png")?;
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources");
+        let texture = Image::from_path(ctx, format!("{resources_dir}/wabbit_alpha.png"))?;
         let mut bunnies = Vec::with_capacity(INITIAL_BUNNIES);
         let max_x = (WIDTH - texture.width() as u16) as f32;
         let max_y = (HEIGHT - texture.height() as u16) as f32;

@@ -40,9 +40,9 @@ impl MainState {
     }
 
     fn new(ctx: &mut Context) -> GameResult<MainState> {
-        let image = graphics::Image::from_path(ctx, "/dragon1.png")?;
-
-        let mut sound = audio::Source::new(ctx, "/sound.ogg")?;
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources");
+        let image = graphics::Image::from_path(ctx, format!("{resources_dir}/dragon1.png"))?;
+        let mut sound = audio::Source::new(ctx, format!("{resources_dir}/sound.ogg"))?;
 
         // "detached" sounds keep playing even after they are dropped
         let _ = sound.play_detached(ctx);

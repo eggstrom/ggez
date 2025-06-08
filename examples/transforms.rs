@@ -20,7 +20,8 @@ struct MainState {
 
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
-        let angle = graphics::Image::from_path(ctx, "/angle.png")?;
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources");
+        let angle = graphics::Image::from_path(ctx, format!("{resources_dir}/angle.png"))?;
         let gridmesh_builder = &mut graphics::MeshBuilder::new();
         for x in 0..GRID_SIZE {
             for y in 0..GRID_SIZE {

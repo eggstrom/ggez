@@ -16,7 +16,8 @@ struct MainState {
 
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
-        let sound = audio::Source::new(ctx, "/sound.ogg")?;
+        let resources_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/resources");
+        let sound = audio::Source::new(ctx, format!("{resources_dir}/sound.ogg"))?;
         let s = MainState { sound };
         Ok(s)
     }
